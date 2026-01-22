@@ -564,7 +564,7 @@ async function listProjectsFromFirebase() {
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-var pd=null,sc=1.8,ca=document.getElementById('can'),ct=ca.getContext('2d'),ov=document.getElementById('ov'),ws=[],pt=null,cn=1,startNum=1,originalFileName='',editMode=false,moveMode=false,selectedWeldId=null,editCrossMode=false,activeTab='redpen';
+var pd=null,sc=1.0,ca=document.getElementById('can'),ct=ca.getContext('2d'),ov=document.getElementById('ov'),ws=[],pt=null,cn=1,startNum=1,originalFileName='',editMode=false,moveMode=false,selectedWeldId=null,editCrossMode=false,activeTab='redpen';
 var loadedImage=null,baseImageWidth=0,baseImageHeight=0; // Pre zoom PNG obrázkov
 var weldHistory=[];
 var projectsData={
@@ -3732,7 +3732,7 @@ updateZoomDisplay();
 }
 
 function zr(){
-sc=1.8;
+sc=1.0;
 if(pd)rp();
 else if(loadedImage)redrawImageWithZoom();
 else dw();
