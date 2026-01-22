@@ -246,7 +246,6 @@ async function listProjectsFromFirebase() {
 <button onclick="openWeldBook()" id="weldbookbtn">📊 WeldBook</button>
 <button onclick="openMTO()" id="mtobtn" disabled>📊 MTO</button>
 <button onclick="saveProject()" id="saveproj" disabled>💾 Projekt</button>
-<button onclick="saveToLibrary()" id="savetolibrary" disabled style="background:#10b981;color:white">☁️ Do knižnice</button>
 <button onclick="document.getElementById('loadproj').click()" id="loadprojbtn" disabled>📂 Načítať</button>
 <button onclick="savePDF()" id="savepdf" disabled>📄 PDF</button>
 <button onclick="cl()" id="cl" disabled>🗑️ Zmazať</button>
@@ -564,7 +563,8 @@ async function listProjectsFromFirebase() {
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-var pd=null,sc=2.0,ca=document.getElementById('can'),ct=ca.getContext('2d'),ov=document.getElementById('ov'),ws=[],pt=null,cn=1,startNum=1,originalFileName='',editMode=false,moveMode=false,selectedWeldId=null,editCrossMode=false,activeTab='redpen';
+var pd=null,sc=1.8,ca=document.getElementById('can'),ct=ca.getContext('2d'),ov=document.getElementById('ov'),ws=[],pt=null,cn=1,startNum=1,originalFileName='',editMode=false,moveMode=false,selectedWeldId=null,editCrossMode=false,activeTab='redpen';
+var loadedImage=null,baseImageWidth=0,baseImageHeight=0; // Pre zoom PNG obrázkov
 var weldHistory=[];
 var projectsData={
   currentProject: null,
@@ -826,7 +826,6 @@ document.getElementById('zo').disabled=false;
 document.getElementById('zr').disabled=false;
 document.getElementById('savepdf').disabled=false;
 document.getElementById('saveproj').disabled=false;
-document.getElementById('savetolibrary').disabled=false;
 document.getElementById('loadprojbtn').disabled=false;
 document.getElementById('editmode').disabled=false;
 document.getElementById('editcrossmode').disabled=false;
@@ -894,7 +893,6 @@ document.getElementById('zo').disabled=false;
 document.getElementById('zr').disabled=false;
 document.getElementById('savepdf').disabled=false;
 document.getElementById('saveproj').disabled=false;
-document.getElementById('savetolibrary').disabled=false;
 document.getElementById('loadprojbtn').disabled=false;
 document.getElementById('editmode').disabled=false;
 document.getElementById('editcrossmode').disabled=false;
@@ -3717,23 +3715,42 @@ alert('⚠️ Nič na zmazanie!');
 function zi(){
 sc+=0.2;
 if(pd)rp();
+else if(loadedImage)redrawImageWithZoom();
 else dw();
 updateZoomDisplay();
 }
 
 function zo(){
-if(sc>0.5){
+if(sc>0.1){
 sc-=0.2;
 if(pd)rp();
+else if(loadedImage)redrawImageWithZoom();
 else dw();
 updateZoomDisplay();
 }
 }
 
 function zr(){
-sc=2.0;
+sc=1.8;
 if(pd)rp();
+else if(loadedImage)redrawImageWithZoom();
 else dw();
+updateZoomDisplay();
+}
+
+// Funkcia na zoom PNG obrázkov z knižnice
+function redrawImageWithZoom(){
+if(!loadedImage)return;
+var newWidth=baseImageWidth*sc;
+var newHeight=baseImageHeight*sc;
+ca.width=newWidth;
+ca.height=newHeight;
+ov.setAttribute('width',newWidth);
+ov.setAttribute('height',newHeight);
+ct.clearRect(0,0,newWidth,newHeight);
+ct.imageSmoothingEnabled=false;
+ct.drawImage(loadedImage,0,0,newWidth,newHeight);
+dw();
 updateZoomDisplay();
 }
 
@@ -6028,62 +6045,6 @@ URL.revokeObjectURL(ur);
 alert('✅ Projekt uložený!\n\nSúbor: '+(originalFileName||'zvary')+'_projekt.json\nZvarov: '+ws.length+'\nVeľkosť: ~'+(json.length/1024/1024).toFixed(1)+' MB');
 }
 
-// ✅ NOVÁ FUNKCIA - Uložiť do Online knižnice
-async function saveToLibrary() {
-  try {
-    // Priprav dáta projektu (rovnaká štruktúra ako saveProject)
-    var pdfDataUrl = '';
-    if (pd) {
-      var canvas = document.createElement('canvas');
-      var ctx = canvas.getContext('2d');
-      canvas.width = ca.width;
-      canvas.height = ca.height;
-      ctx.drawImage(ca, 0, 0);
-      pdfDataUrl = canvas.toDataURL('image/png');
-    } else if (ca.width > 0) {
-      pdfDataUrl = ca.toDataURL('image/png');
-    }
-    
-    var projectData = {
-      welds: ws,
-      spools: spools,
-      crosses: crosses,
-      dimensions: dimensions,
-      spoolData: spoolData,
-      materials: weldLogMaterials,
-      weldAssignments: weldAssignments,
-      currentNumber: cn,
-      startNumber: startNum,
-      projectName: originalFileName || 'zvary',
-      scale: sc,
-      canvasWidth: ca.width,
-      canvasHeight: ca.height,
-      pdfData: pdfDataUrl,
-      savedDate: new Date().toISOString()
-    };
-    
-    // Zobraz loading
-    var saveBtn = document.getElementById('savetolibrary');
-    var originalText = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '⏳ Ukladám...';
-    
-    // Upload do Firebase
-    await uploadProjectToFirebase(projectData);
-    
-    // Obnov tlačidlo
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = originalText;
-    
-    alert('✅ Projekt uložený do knižnice!\n\nNázov: ' + projectData.projectName + '\nZvarov: ' + ws.length + '\nMôžete ho načítať z Online knižnice.');
-  } catch (error) {
-    console.error('❌ Chyba pri ukladaní:', error);
-    alert('❌ Chyba pri ukladaní do knižnice:\n' + error.message);
-    document.getElementById('savetolibrary').disabled = false;
-    document.getElementById('savetolibrary').innerHTML = '☁️ Do knižnice';
-  }
-}
-
 document.getElementById('loadproj').onchange=function(e){
 var fi=e.target.files[0];
 if(!fi)return;
@@ -6126,7 +6087,6 @@ document.getElementById('zo').disabled=false;
 document.getElementById('zr').disabled=false;
 document.getElementById('savepdf').disabled=false;
 document.getElementById('saveproj').disabled=false;
-document.getElementById('savetolibrary').disabled=false;
 document.getElementById('loadprojbtn').disabled=false;
 document.getElementById('editmode').disabled=false;
 document.getElementById('editcrossmode').disabled=false;
@@ -8301,15 +8261,60 @@ async function loadLibrary() {
     grid.innerHTML = projects.map((p, i) => {
       const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, '\\"');
       return `
-      <div onclick="loadFromLibraryFirebase('${safeName}')" style="border:2px solid #ddd;border-radius:8px;padding:15px;cursor:pointer;transition:all 0.3s;background:white" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='#ddd';this.style.transform='translateY(0)'">
+      <div onclick="loadFromLibraryFirebase('${safeName}')" style="position:relative;border:2px solid #ddd;border-radius:8px;padding:15px;cursor:pointer;transition:all 0.3s;background:white" onmouseover="this.style.borderColor='#667eea';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='#ddd';this.style.transform='translateY(0)'">
+        <button onclick="deleteFromFirebase('${safeName}'); event.stopPropagation();" style="position:absolute;top:10px;right:10px;background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px;opacity:0;transition:opacity 0.3s;z-index:10;" onmouseover="this.style.background='#c82333';this.parentElement.onmouseout=null;this.parentElement.onmouseover=null;" onmouseout="this.style.background='#dc3545';">🗑️</button>
         <div style="font-size:60px;text-align:center;margin-bottom:10px">📄</div>
         <div style="font-weight:600;font-size:14px;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}</div>
         <div style="font-size:12px;color:#666">${(p.size/1024/1024).toFixed(1)} MB</div>
         <div style="font-size:11px;color:#999;margin-top:5px">${new Date(p.date).toLocaleDateString('sk')}</div>
       </div>
     `}).join('');
+    
+    // Zobraz delete tlačidlá pri hover
+    document.querySelectorAll('#libraryGrid > div').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        const btn = this.querySelector('button');
+        if (btn) btn.style.opacity = '1';
+      });
+      card.addEventListener('mouseleave', function() {
+        const btn = this.querySelector('button');
+        if (btn) btn.style.opacity = '0';
+      });
+    });
+    
   } catch(e) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#f00">❌ Chyba: ' + e.message + '</div>';
+  }
+}
+
+// Vymazanie projektu z Firebase
+async function deleteFromFirebase(projectName) {
+  if (!confirm(`Naozaj vymazať projekt "${projectName}"?\n\nTáto akcia je nevratná!`)) {
+    return;
+  }
+  
+  try {
+    console.log('🗑️ Mazanie projektu:', projectName);
+    
+    // Vymaž hlavný dokument
+    await db.collection('projects').doc(projectName).delete();
+    
+    // Vymaž aj chunks ak existujú
+    try {
+      const chunksSnapshot = await db.collection('projects').doc(projectName).collection('data').get();
+      const deletePromises = chunksSnapshot.docs.map(doc => doc.ref.delete());
+      await Promise.all(deletePromises);
+      console.log('✅ Vymazané', chunksSnapshot.size, 'chunkov');
+    } catch(e) {
+      console.log('ℹ️ Žiadne chunky na vymazanie');
+    }
+    
+    alert('✅ Projekt vymazaný!');
+    loadLibrary(); // Refresh
+    
+  } catch(e) {
+    console.error('❌ Chyba pri mazaní:', e);
+    alert('❌ Chyba pri mazaní projektu:\n' + e.message);
   }
 }
 
@@ -8322,21 +8327,56 @@ function uploadToLibrary() {
   input.onchange = async function(e) {
     const files = Array.from(e.target.files);
     let processed = 0;
+    let errors = 0;
     
-    for (const file of files) {
+    // Vytvor progress dialog
+    const progressDiv = document.createElement('div');
+    progressDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:10000;min-width:400px;';
+    progressDiv.innerHTML = `
+      <h3 style="margin:0 0 20px 0;color:#333;">📤 Nahrávam projekty do knižnice</h3>
+      <div style="background:#e0e0e0;height:30px;border-radius:15px;overflow:hidden;margin-bottom:15px;">
+        <div id="progressBar" style="background:linear-gradient(90deg,#667eea,#764ba2);height:100%;width:0%;transition:width 0.3s;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;"></div>
+      </div>
+      <div id="progressText" style="text-align:center;color:#666;font-size:14px;">Pripravujem...</div>
+    `;
+    document.body.appendChild(progressDiv);
+    
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       try {
+        // Update progress
+        const percent = Math.round(((i + 1) / files.length) * 100);
+        progressBar.style.width = percent + '%';
+        progressBar.textContent = percent + '%';
+        progressText.innerHTML = `📦 Nahrávam: <strong>${file.name}</strong><br>${i + 1}/${files.length} súborov`;
+        
         const text = await file.text();
         const data = JSON.parse(text);
         await uploadProjectToFirebase(data);
         processed++;
-        console.log(`${processed}/${files.length}`);
+        
+        // Delay medzi uploadmi (zabráni Firebase rate limit)
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
       } catch(e) {
-        console.error('Chyba:', e);
+        console.error('Chyba pri', file.name, ':', e);
+        errors++;
       }
     }
     
-    alert(`✅ Uploadnutých ${processed}/${files.length} projektov!`);
-    loadLibrary();
+    // Hotovo
+    progressBar.style.width = '100%';
+    progressBar.style.background = '#10b981';
+    progressBar.textContent = '✅ 100%';
+    progressText.innerHTML = `<strong style="color:#10b981;">✅ Hotovo!</strong><br>Úspešne: ${processed}, Chyby: ${errors}`;
+    
+    setTimeout(() => {
+      document.body.removeChild(progressDiv);
+      loadLibrary();
+    }, 2000);
   };
   
   input.click();
@@ -8357,12 +8397,6 @@ async function loadFromLibraryFirebase(projectName) {
     startNum = projectData.startNumber || 1;
     originalFileName = projectData.projectName || 'zvary';
     
-    // ✅ Zobraz názov súboru v UI
-    var fileNameSpan = document.getElementById('fileName');
-    if (fileNameSpan) {
-      fileNameSpan.textContent = originalFileName + '.pdf';
-    }
-    
     console.log('🔵 Data loaded, welds:', ws.length);
     
     if (projectData.pdfData) {
@@ -8371,51 +8405,29 @@ async function loadFromLibraryFirebase(projectName) {
       img.onload = function() {
         console.log('🔵 PDF loaded, drawing...');
         
+        // Ulož obrázok pre zoom
+        loadedImage = img;
+        baseImageWidth = img.naturalWidth || img.width;
+        baseImageHeight = img.naturalHeight || img.height;
+        
         // Zobraz canvas wrapper
         document.getElementById('up').style.display = 'none';
         document.getElementById('cw').style.display = 'block';
         
-        // ✅ OPRAVA - Aktivácia tlačidiel po načítaní z knižnice
-        document.getElementById('zoomInfo').style.display='block';
-        document.getElementById('zi').disabled=false;
-        document.getElementById('zo').disabled=false;
-        document.getElementById('zr').disabled=false;
-        document.getElementById('savepdf').disabled=false;
-        document.getElementById('saveproj').disabled=false;
-document.getElementById('savetolibrary').disabled=false;
-        document.getElementById('loadprojbtn').disabled=false;
-        document.getElementById('editmode').disabled=false;
-        document.getElementById('editcrossmode').disabled=false;
-        document.getElementById('setstart').disabled=false;
-        document.getElementById('selectbtn').disabled=false;
-        document.getElementById('crossbtn').disabled=false;
-        document.getElementById('spoolbtn').disabled=false;
-        document.getElementById('spoollistbtn').disabled=false;
-        document.getElementById('refreshspoolbtn').disabled=false;
-        document.getElementById('addmontazweld').disabled=false;
-        document.getElementById('spoolspreview').disabled=false;
-        document.getElementById('montazline').disabled=false;
-        document.getElementById('montaztext').disabled=false;
-        document.getElementById('weldlogbtn').disabled=false;
-        document.getElementById('oneclickbtn').disabled=false;
-        document.getElementById('twoclickbtn').disabled=false;
-        document.getElementById('mtobtn').disabled=false;
-        document.getElementById('dimensionbtn').disabled=false;
-        document.getElementById('linebtn').disabled=false;
-        document.getElementById('textbtn').disabled=false;
-        document.getElementById('curvebtn').disabled=false;
-        document.getElementById('arrowbtn').disabled=false;
-        document.getElementById('doublearrowbtn').disabled=false;
-        document.getElementById('undo').disabled=false;
+        // Nastav zoom 180%
+        sc = 1.8;
+        var scaledWidth = baseImageWidth * sc;
+        var scaledHeight = baseImageHeight * sc;
         
-        ca.width = img.width;
-        ca.height = img.height;
-        ov.setAttribute('width', img.width);
-        ov.setAttribute('height', img.height);
-        ct.clearRect(0, 0, ca.width, ca.height);
-        ct.drawImage(img, 0, 0);
-        sc = projectData.scale || 2.0;
+        ca.width = scaledWidth;
+        ca.height = scaledHeight;
+        ov.setAttribute('width', scaledWidth);
+        ov.setAttribute('height', scaledHeight);
+        ct.clearRect(0, 0, scaledWidth, scaledHeight);
+        ct.imageSmoothingEnabled = false;
+        ct.drawImage(img, 0, 0, scaledWidth, scaledHeight);
         dw();
+        updateZoomDisplay();
         closeLibrary();
         alert('✅ Projekt načítaný: ' + originalFileName);
       };
@@ -8457,14 +8469,25 @@ function loadFromLibrary(index) {
   if (projectData.pdfData) {
     const img = new Image();
     img.onload = function() {
-      ca.width = img.width;
-      ca.height = img.height;
-      ov.setAttribute('width', img.width);
-      ov.setAttribute('height', img.height);
-      ct.clearRect(0, 0, ca.width, ca.height);
-      ct.drawImage(img, 0, 0);
-      sc = projectData.scale || 2.0;
+      // Ulož obrázok pre zoom
+      loadedImage = img;
+      baseImageWidth = img.naturalWidth || img.width;
+      baseImageHeight = img.naturalHeight || img.height;
+      
+      // Nastav zoom 180%
+      sc = 1.8;
+      var scaledWidth = baseImageWidth * sc;
+      var scaledHeight = baseImageHeight * sc;
+      
+      ca.width = scaledWidth;
+      ca.height = scaledHeight;
+      ov.setAttribute('width', scaledWidth);
+      ov.setAttribute('height', scaledHeight);
+      ct.clearRect(0, 0, scaledWidth, scaledHeight);
+      ct.imageSmoothingEnabled = false;
+      ct.drawImage(img, 0, 0, scaledWidth, scaledHeight);
       dw();
+      updateZoomDisplay();
       closeLibrary();
       alert('✅ Projekt načítaný: ' + originalFileName);
     };
