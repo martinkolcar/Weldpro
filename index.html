@@ -6264,10 +6264,13 @@ var dx=endX-startX;
 var dy=endY-startY;
 var len=Math.sqrt(dx*dx+dy*dy);
 var numLen=String(w.displayNum).length;
-var radius=22;
-if(numLen>=4)radius=30;
-else if(numLen>=3)radius=26;
-else if(numLen>=2)radius=24;
+// ✅ Radius nezávislý na zoom
+var baseRadius=22;
+if(numLen>=4)baseRadius=30;
+else if(numLen>=3)baseRadius=26;
+else if(numLen>=2)baseRadius=24;
+// Normalizuj radius na pôvodný canvas
+var radius = baseImageWidth > 0 ? baseRadius * (baseImageWidth / ca.width) : baseRadius;
 var ratio=(len-radius)/len;
 var lineEndX=startX+dx*ratio;
 var lineEndY=startY+dy*ratio;
@@ -6298,10 +6301,13 @@ tempCtx.beginPath();
 tempCtx.arc(endX,endY,radius,0,Math.PI*2);
 tempCtx.stroke();
 
-var fontSize=34;
-if(numLen>=4)fontSize=24;
-else if(numLen>=3)fontSize=28;
-else if(numLen>=2)fontSize=30;
+// ✅ Font-size nezávislý na zoom
+var baseFontSize=34;
+if(numLen>=4)baseFontSize=24;
+else if(numLen>=3)baseFontSize=28;
+else if(numLen>=2)baseFontSize=30;
+// Normalizuj font-size na pôvodný canvas
+var fontSize = baseImageWidth > 0 ? baseFontSize * (baseImageWidth / ca.width) : baseFontSize;
 
 tempCtx.fillStyle='#FF0000';
 tempCtx.font=fontSize+'px Arial';
