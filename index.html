@@ -6009,15 +6009,39 @@ a.click();
 function saveProject(){
 var pdfDataUrl='';
 if(pd){
-var canvas=document.createElement('canvas');
-var ctx=canvas.getContext('2d');
-canvas.width=ca.width;
-canvas.height=ca.height;
-ctx.drawImage(ca,0,0);
-pdfDataUrl=canvas.toDataURL('image/png');
-}else if(ca.width>0){
-pdfDataUrl=ca.toDataURL('image/png');
+  // Ulož PDF v PLNOM rozlíšení (nie škálované!)
+  var canvas=document.createElement('canvas');
+  var ctx=canvas.getContext('2d');
+  
+  // Použij ORIGINÁLNU veľkosť PDF, nie zoom
+  pd.getPage(1).then(function(pg){
+    var viewport = pg.getViewport({scale: 2.0}); // Vždy vysoké rozlíšenie
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    ctx.imageSmoothingEnabled = false;
+    
+    pg.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
+      pdfDataUrl = canvas.toDataURL('image/png', 0.95); // Vysoká kvalita
+      savePDFData();
+    });
+  });
+  return; // Async operácia
+} else if(loadedImage && baseImageWidth > 0){
+  // Ak je načítané z knižnice, použij originálnu veľkosť
+  var canvas=document.createElement('canvas');
+  var ctx=canvas.getContext('2d');
+  canvas.width = baseImageWidth;
+  canvas.height = baseImageHeight;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(loadedImage, 0, 0, baseImageWidth, baseImageHeight);
+  pdfDataUrl = canvas.toDataURL('image/png', 0.95);
+} else if(ca.width>0){
+  pdfDataUrl=ca.toDataURL('image/png', 0.95);
 }
+
+savePDFData();
+
+function savePDFData(){
 var projectData={
 welds:ws,
 spools:spools,
@@ -6030,8 +6054,8 @@ currentNumber:cn,
 startNumber:startNum,
 projectName:originalFileName||'zvary',
 scale:sc,
-canvasWidth:ca.width,
-canvasHeight:ca.height,
+canvasWidth:baseImageWidth || ca.width,
+canvasHeight:baseImageHeight || ca.height,
 pdfData:pdfDataUrl,
 savedDate:new Date().toISOString()
 };
@@ -6045,42 +6069,66 @@ a.click();
 URL.revokeObjectURL(ur);
 alert('✅ Projekt uložený!\n\nSúbor: '+(originalFileName||'zvary')+'_projekt.json\nZvarov: '+ws.length+'\nVeľkosť: ~'+(json.length/1024/1024).toFixed(1)+' MB');
 }
+}
 
 // Uložiť do Firebase knižnice
 async function saveToLibrary(){
 var pdfDataUrl='';
-if(pd){
-var canvas=document.createElement('canvas');
-var ctx=canvas.getContext('2d');
-canvas.width=ca.width;
-canvas.height=ca.height;
-ctx.drawImage(ca,0,0);
-pdfDataUrl=canvas.toDataURL('image/png');
-}else if(ca.width>0){
-pdfDataUrl=ca.toDataURL('image/png');
+
+// Funkcia na uloženie dát
+async function uploadData(){
+  var projectData={
+  welds:ws,
+  spools:spools,
+  crosses:crosses,
+  dimensions:dimensions,
+  spoolData:spoolData,
+  materials:weldLogMaterials,
+  weldAssignments:weldAssignments,
+  currentNumber:cn,
+  startNumber:startNum,
+  projectName:originalFileName||'zvary',
+  scale:sc,
+  canvasWidth:baseImageWidth || ca.width,
+  canvasHeight:baseImageHeight || ca.height,
+  pdfData:pdfDataUrl,
+  savedDate:new Date().toISOString()
+  };
+  try{
+  await uploadProjectToFirebase(projectData);
+  alert('✅ Projekt uložený do knižnice!');
+  }catch(e){
+  alert('❌ Chyba pri ukladaní:\n'+e.message);
+  }
 }
-var projectData={
-welds:ws,
-spools:spools,
-crosses:crosses,
-dimensions:dimensions,
-spoolData:spoolData,
-materials:weldLogMaterials,
-weldAssignments:weldAssignments,
-currentNumber:cn,
-startNumber:startNum,
-projectName:originalFileName||'zvary',
-scale:sc,
-canvasWidth:ca.width,
-canvasHeight:ca.height,
-pdfData:pdfDataUrl,
-savedDate:new Date().toISOString()
-};
-try{
-await uploadProjectToFirebase(projectData);
-alert('✅ Projekt uložený do knižnice!');
-}catch(e){
-alert('❌ Chyba pri ukladaní:\n'+e.message);
+
+if(pd){
+  // PDF v plnom rozlíšení
+  var canvas=document.createElement('canvas');
+  var ctx=canvas.getContext('2d');
+  pd.getPage(1).then(function(pg){
+    var viewport = pg.getViewport({scale: 2.0});
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    ctx.imageSmoothingEnabled = false;
+    pg.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
+      pdfDataUrl = canvas.toDataURL('image/png', 0.95);
+      uploadData();
+    });
+  });
+} else if(loadedImage && baseImageWidth > 0){
+  // Originálna veľkosť z knižnice
+  var canvas=document.createElement('canvas');
+  var ctx=canvas.getContext('2d');
+  canvas.width = baseImageWidth;
+  canvas.height = baseImageHeight;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(loadedImage, 0, 0, baseImageWidth, baseImageHeight);
+  pdfDataUrl = canvas.toDataURL('image/png', 0.95);
+  await uploadData();
+} else if(ca.width>0){
+  pdfDataUrl=ca.toDataURL('image/png', 0.95);
+  await uploadData();
 }
 }
 
