@@ -8562,9 +8562,14 @@ async function loadFromLibraryFirebase(projectName) {
         updateZoomDisplay();
         
         // ✅ Aktualizuj názov súboru v hlavičke
+        console.log('🔵 Updating fileName to:', originalFileName);
         var fileNameSpan = document.getElementById('fileName');
+        console.log('🔵 fileNameSpan element:', fileNameSpan);
         if (fileNameSpan) {
           fileNameSpan.textContent = originalFileName;
+          console.log('✅ fileName updated to:', fileNameSpan.textContent);
+        } else {
+          console.error('❌ fileName span not found!');
         }
         
         closeLibrary();
@@ -8630,9 +8635,14 @@ function loadFromLibrary(index) {
       updateZoomDisplay();
       
       // ✅ Aktualizuj názov súboru v hlavičke
+      console.log('🔵 (localStorage) Updating fileName to:', originalFileName);
       var fileNameSpan = document.getElementById('fileName');
+      console.log('🔵 (localStorage) fileNameSpan element:', fileNameSpan);
       if (fileNameSpan) {
         fileNameSpan.textContent = originalFileName;
+        console.log('✅ (localStorage) fileName updated to:', fileNameSpan.textContent);
+      } else {
+        console.error('❌ (localStorage) fileName span not found!');
       }
       
       closeLibrary();
