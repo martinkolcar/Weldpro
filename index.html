@@ -246,6 +246,7 @@ async function listProjectsFromFirebase() {
 <button onclick="openWeldBook()" id="weldbookbtn">📊 WeldBook</button>
 <button onclick="openMTO()" id="mtobtn" disabled>📊 MTO</button>
 <button onclick="saveProject()" id="saveproj" disabled>💾 Projekt</button>
+<button onclick="saveToLibrary()" id="savetolibrary" disabled style="background:#10b981;color:white">☁️ Do knižnice</button>
 <button onclick="document.getElementById('loadproj').click()" id="loadprojbtn" disabled>📂 Načítať</button>
 <button onclick="savePDF()" id="savepdf" disabled>📄 PDF</button>
 <button onclick="cl()" id="cl" disabled>🗑️ Zmazať</button>
@@ -6043,6 +6044,44 @@ a.download=(originalFileName||'zvary')+'_projekt.json';
 a.click();
 URL.revokeObjectURL(ur);
 alert('✅ Projekt uložený!\n\nSúbor: '+(originalFileName||'zvary')+'_projekt.json\nZvarov: '+ws.length+'\nVeľkosť: ~'+(json.length/1024/1024).toFixed(1)+' MB');
+}
+
+// Uložiť do Firebase knižnice
+async function saveToLibrary(){
+var pdfDataUrl='';
+if(pd){
+var canvas=document.createElement('canvas');
+var ctx=canvas.getContext('2d');
+canvas.width=ca.width;
+canvas.height=ca.height;
+ctx.drawImage(ca,0,0);
+pdfDataUrl=canvas.toDataURL('image/png');
+}else if(ca.width>0){
+pdfDataUrl=ca.toDataURL('image/png');
+}
+var projectData={
+welds:ws,
+spools:spools,
+crosses:crosses,
+dimensions:dimensions,
+spoolData:spoolData,
+materials:weldLogMaterials,
+weldAssignments:weldAssignments,
+currentNumber:cn,
+startNumber:startNum,
+projectName:originalFileName||'zvary',
+scale:sc,
+canvasWidth:ca.width,
+canvasHeight:ca.height,
+pdfData:pdfDataUrl,
+savedDate:new Date().toISOString()
+};
+try{
+await uploadProjectToFirebase(projectData);
+alert('✅ Projekt uložený do knižnice!');
+}catch(e){
+alert('❌ Chyba pri ukladaní:\n'+e.message);
+}
 }
 
 document.getElementById('loadproj').onchange=function(e){
