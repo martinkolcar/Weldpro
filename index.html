@@ -1877,10 +1877,12 @@ var dx=endX-startX;
 var dy=endY-startY;
 var len=Math.sqrt(dx*dx+dy*dy);
 var numLen=String(w.displayNum).length;
-var radius=22;
-if(numLen>=4)radius=30;
-else if(numLen>=3)radius=26;
-else if(numLen>=2)radius=24;
+// ✅ Škáluj radius podľa zoom (sc)
+var baseRadius=22;
+if(numLen>=4)baseRadius=30;
+else if(numLen>=3)baseRadius=26;
+else if(numLen>=2)baseRadius=24;
+var radius=baseRadius*sc; // Škáluj s zoom!
 var ratio=(len-radius)/len;
 var lineEndX=startX+dx*ratio;
 var lineEndY=startY+dy*ratio;
@@ -1900,17 +1902,17 @@ ln.setAttribute('y1',startY);
 ln.setAttribute('x2',lineEndX);
 ln.setAttribute('y2',lineEndY);
 ln.setAttribute('stroke',weldColor);
-ln.setAttribute('stroke-width','2.5');
+ln.setAttribute('stroke-width',2.5*sc); // Škáluj s zoom
 ov.appendChild(ln);
 
-var crossSize=1.6;
+var crossSize=1.6*sc; // Škáluj s zoom
 var l1=document.createElementNS('http://www.w3.org/2000/svg','line');
 l1.setAttribute('x1',startX-crossSize);
 l1.setAttribute('y1',startY-crossSize);
 l1.setAttribute('x2',startX+crossSize);
 l1.setAttribute('y2',startY+crossSize);
 l1.setAttribute('stroke',weldColor);
-l1.setAttribute('stroke-width','2');
+l1.setAttribute('stroke-width',2*sc); // Škáluj s zoom
 ov.appendChild(l1);
 
 var l2=document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -1919,7 +1921,7 @@ l2.setAttribute('y1',startY+crossSize);
 l2.setAttribute('x2',startX+crossSize);
 l2.setAttribute('y2',startY-crossSize);
 l2.setAttribute('stroke',weldColor);
-l2.setAttribute('stroke-width','2');
+l2.setAttribute('stroke-width',2*sc); // Škáluj s zoom
 ov.appendChild(l2);
 
 var cr=document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -1928,13 +1930,15 @@ cr.setAttribute('cy',endY);
 cr.setAttribute('r',radius);
 cr.setAttribute('fill','none');
 cr.setAttribute('stroke',weldColor);
-cr.setAttribute('stroke-width','1.5');
+cr.setAttribute('stroke-width',1.5*sc); // Škáluj s zoom
 ov.appendChild(cr);
 
-var fontSize=34;
-if(numLen>=4)fontSize=24;
-else if(numLen>=3)fontSize=28;
-else if(numLen>=2)fontSize=30;
+// ✅ Škáluj fontSize podľa zoom (sc)
+var baseFontSize=34;
+if(numLen>=4)baseFontSize=24;
+else if(numLen>=3)baseFontSize=28;
+else if(numLen>=2)baseFontSize=30;
+var fontSize=baseFontSize*sc; // Škáluj s zoom!
 
 var tx=document.createElementNS('http://www.w3.org/2000/svg','text');
 tx.setAttribute('x',endX);
