@@ -6015,7 +6015,7 @@ if(pd){
   
   // Použij ORIGINÁLNU veľkosť PDF, nie zoom
   pd.getPage(1).then(function(pg){
-    var viewport = pg.getViewport({scale: 2.0}); // Vždy vysoké rozlíšenie
+    var viewport = pg.getViewport({scale: 1.4}); // Optimálne rozlíšenie 1.4x
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     ctx.imageSmoothingEnabled = false;
@@ -6107,7 +6107,7 @@ if(pd){
   var canvas=document.createElement('canvas');
   var ctx=canvas.getContext('2d');
   pd.getPage(1).then(function(pg){
-    var viewport = pg.getViewport({scale: 2.0});
+    var viewport = pg.getViewport({scale: 1.4});
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     ctx.imageSmoothingEnabled = false;
@@ -8500,9 +8500,8 @@ async function loadFromLibraryFirebase(projectName) {
         
         // Ulož obrázok pre zoom
         loadedImage = img;
-        // ✅ Normalizuj na 1.4x (ak obrázok je v 2.0x → zmenši na 1.4x)
-        baseImageWidth = (img.naturalWidth || img.width) / 1.4286; // 2.0 / 1.4 = 1.4286
-        baseImageHeight = (img.naturalHeight || img.height) / 1.4286;
+        baseImageWidth = img.naturalWidth || img.width;
+        baseImageHeight = img.naturalHeight || img.height;
         
         // Zobraz canvas wrapper
         document.getElementById('up').style.display = 'none';
@@ -8610,9 +8609,8 @@ function loadFromLibrary(index) {
     img.onload = function() {
       // Ulož obrázok pre zoom
       loadedImage = img;
-      // ✅ Normalizuj na 1.4x (ak obrázok je v 2.0x → zmenši na 1.4x)
-      baseImageWidth = (img.naturalWidth || img.width) / 1.4286;
-      baseImageHeight = (img.naturalHeight || img.height) / 1.4286;
+      baseImageWidth = img.naturalWidth || img.width;
+      baseImageHeight = img.naturalHeight || img.height;
       
       // Nastav zoom 100%
       sc = 1.0;
