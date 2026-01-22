@@ -8414,6 +8414,39 @@ async function loadFromLibraryFirebase(projectName) {
         document.getElementById('up').style.display = 'none';
         document.getElementById('cw').style.display = 'block';
         
+        // ✅ AKTIVUJ VŠETKY TLAČIDLÁ
+        document.getElementById('zoomInfo').style.display='block';
+        document.getElementById('zi').disabled=false;
+        document.getElementById('zo').disabled=false;
+        document.getElementById('zr').disabled=false;
+        document.getElementById('savepdf').disabled=false;
+        document.getElementById('saveproj').disabled=false;
+        document.getElementById('savetolibrary').disabled=false;
+        document.getElementById('loadprojbtn').disabled=false;
+        document.getElementById('editmode').disabled=false;
+        document.getElementById('editcrossmode').disabled=false;
+        document.getElementById('setstart').disabled=false;
+        document.getElementById('selectbtn').disabled=false;
+        document.getElementById('crossbtn').disabled=false;
+        document.getElementById('spoolbtn').disabled=false;
+        document.getElementById('spoollistbtn').disabled=false;
+        document.getElementById('refreshspoolbtn').disabled=false;
+        document.getElementById('addmontazweld').disabled=false;
+        document.getElementById('spoolspreview').disabled=false;
+        document.getElementById('montazline').disabled=false;
+        document.getElementById('montaztext').disabled=false;
+        document.getElementById('weldlogbtn').disabled=false;
+        document.getElementById('oneclickbtn').disabled=false;
+        document.getElementById('twoclickbtn').disabled=false;
+        document.getElementById('mtobtn').disabled=false;
+        document.getElementById('dimensionbtn').disabled=false;
+        document.getElementById('linebtn').disabled=false;
+        document.getElementById('textbtn').disabled=false;
+        document.getElementById('curvebtn').disabled=false;
+        document.getElementById('arrowbtn').disabled=false;
+        document.getElementById('doublearrowbtn').disabled=false;
+        document.getElementById('undo').disabled=false;
+        
         // Nastav zoom 180%
         sc = 1.8;
         var scaledWidth = baseImageWidth * sc;
