@@ -8560,6 +8560,13 @@ async function loadFromLibraryFirebase(projectName) {
         ct.drawImage(img, 0, 0, scaledWidth, scaledHeight);
         dw();
         updateZoomDisplay();
+        
+        // ✅ Aktualizuj názov súboru v hlavičke
+        var fileNameSpan = document.getElementById('fileName');
+        if (fileNameSpan) {
+          fileNameSpan.textContent = originalFileName;
+        }
+        
         closeLibrary();
         alert('✅ Projekt načítaný: ' + originalFileName);
       };
@@ -8621,6 +8628,13 @@ function loadFromLibrary(index) {
       ct.drawImage(img, 0, 0, scaledWidth, scaledHeight);
       dw();
       updateZoomDisplay();
+      
+      // ✅ Aktualizuj názov súboru v hlavičke
+      var fileNameSpan = document.getElementById('fileName');
+      if (fileNameSpan) {
+        fileNameSpan.textContent = originalFileName;
+      }
+      
       closeLibrary();
       alert('✅ Projekt načítaný: ' + originalFileName);
     };
