@@ -8500,8 +8500,9 @@ async function loadFromLibraryFirebase(projectName) {
         
         // Ulož obrázok pre zoom
         loadedImage = img;
-        baseImageWidth = img.naturalWidth || img.width;
-        baseImageHeight = img.naturalHeight || img.height;
+        // ✅ OPRAVA: PDF bol uložený v 2.0x, tak ho zmenši na 1.0x (100%)
+        baseImageWidth = (img.naturalWidth || img.width) / 2.0;
+        baseImageHeight = (img.naturalHeight || img.height) / 2.0;
         
         // Zobraz canvas wrapper
         document.getElementById('up').style.display = 'none';
@@ -8602,8 +8603,9 @@ function loadFromLibrary(index) {
     img.onload = function() {
       // Ulož obrázok pre zoom
       loadedImage = img;
-      baseImageWidth = img.naturalWidth || img.width;
-      baseImageHeight = img.naturalHeight || img.height;
+      // ✅ OPRAVA: PDF bol uložený v 2.0x, tak ho zmenši na 1.0x (100%)
+      baseImageWidth = (img.naturalWidth || img.width) / 2.0;
+      baseImageHeight = (img.naturalHeight || img.height) / 2.0;
       
       // Nastav zoom 100%
       sc = 1.0;
